@@ -74,9 +74,9 @@
   <h2>Headline numbers</h2>
   <p class="lead">Frozen rule sets, scored on 10 held-out seeds and 4 attacker strategies, native events only. 10 independent training runs per condition (95% bootstrap intervals in the paper).</p>
   <div class="grid">
-    <div class="card"><div class="num good">0.97+ <small>precision</small></div><div class="label">LLM-written rules are precise: false-positive rate at most 0.03</div></div>
+    <div class="card"><div class="num good">0.03 <small>max FPR</small></div><div class="label">LLM-written rules raise few false alarms (raw precision is flattered: attackers are 84% of native events)</div></div>
     <div class="card"><div class="num mid">0.49 <small>recall</small></div><div class="label">co-evolved system in the ten main runs (0.26 against a fixed attacker); a replication on ten more seeds did not confirm that gap</div></div>
-    <div class="card"><div class="num bad">0.96 <small>recall</small></div><div class="label">ten hand-written rules, but with 19% false positives</div></div>
+    <div class="card"><div class="num bad">1.00 <small>recall</small></div><div class="label">a greedy learner with 12 single-field rules and no LLM, at 0.000 false positives (hand-written: 0.96 at 19% false positives)</div></div>
     <div class="card"><div class="num">0.67 <small>recall</small></div><div class="label">ablation without performance feedback, with more false positives</div></div>
     <div class="card"><div class="num good">0.69 <small>recall</small></div><div class="label">pooling the rules of three independent co-evolved runs, at 2.4% false positives (20-run replication, exploratory)</div></div>
   </div>
@@ -105,6 +105,7 @@
     <div class="card"><b>4. No clear benefit of co-evolution <span class="pill">negative result</span></b>In the ten main runs, training against a varied attacker gave more recall than a fixed one. Ten further runs per condition reversed the ordering (0.25 against 0.33), and over all twenty runs the difference was +0.076 with an interval that includes zero. A scripted evasive attacker, a larger rule budget and a larger model (3 runs) also showed no clear benefit. We report it as it came out.</div>
     <div class="card"><b>5. Pooling independent runs works <span class="pill">exploratory</span></b>Taking the union of the rules of independent runs raises recall steadily. With 20 co-evolved runs available, 3 pooled runs give 0.69 recall at 0.024 false-positive rate, 5 give 0.82 at 0.045, and 10 give 0.96 at 0.080, against 0.96 at 0.193 for the hand-written rules. Pooled co-evolved sets were not clearly better than pooled fixed-attacker sets (every interval includes zero). This analysis was added after the main results, so we call it exploratory.</div>
     <div class="card"><b>6. Whole campaigns are still caught <span class="pill">measured</span></b>Every rule set alerted on an attacker event in all 40 seen test episodes, with a median delay of 0 to 6.5 steps.</div>
+    <div class="card"><b>7. The testbed is easy to separate <span class="pill">baseline check</span></b>Fitted rules without an LLM reach recall 0.94 to 1.00 at no false positives. The LLM rules use the same port but wrap it in narrow, analyst-style context and lean on fields our bridge filled in (blanking them cuts co-evolved recall from 0.49 to 0.19). Code, rule sets and results: <a href="https://github.com/bhavitanand/co-evolutionary-purple-teaming-cage4">github.com/bhavitanand/co-evolutionary-purple-teaming-cage4</a>.</div>
   </div>
   <div class="two" style="margin-top:14px">
     <figure>
