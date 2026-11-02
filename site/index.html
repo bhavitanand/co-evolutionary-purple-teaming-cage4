@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Co-Evolutionary Purple Teaming for SOC Detection Engineering</title>
+<meta name="description" content="A pilot study: can LLM agents write and maintain Sigma-style detection rules in a loop with an adaptive attacker? Results on CAGE Challenge 4.">
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#15202b; --muted:#5b6775; --line:#e3e7ec;
+    --accent:#1f4e8c; --red:#b3392f; --green:#2b7a4b; --amber:#b7791f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f141a; --card:#171e26; --ink:#e8edf2; --muted:#9aa7b5; --line:#27313c; --accent:#6aa7f0; --red:#ef7c70; --green:#5fc08a; --amber:#e0b254; }
+    img.fig{ background:#fff; }
+  }
+  *{ box-sizing:border-box }
+  body{ margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif }
+  header{ background:linear-gradient(135deg,#12294a,#1f4e8c); color:#fff; padding:56px 16px 48px }
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 16px }
+  header .wrap{ padding:0 }
+  h1{ font-size:clamp(1.6rem,4vw,2.4rem); line-height:1.2; margin:0 0 12px }
+  header p{ margin:0; max-width:760px; color:#dbe6f5 }
+  .tag{ display:inline-block; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; background:rgba(255,255,255,.15); padding:4px 10px; border-radius:999px; margin-bottom:14px }
+  .authors{ margin-top:18px; font-size:.95rem; color:#c5d6ee }
+  section{ margin:40px 0 }
+  h2{ font-size:1.4rem; margin:0 0 6px }
+  .lead{ color:var(--muted); margin:0 0 18px; max-width:760px }
+  .grid{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)) }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px }
+  .num{ font-size:2rem; font-weight:700; line-height:1.1 }
+  .num small{ font-size:.9rem; font-weight:500; color:var(--muted) }
+  .label{ color:var(--muted); font-size:.9rem; margin-top:4px }
+  .good{ color:var(--green) } .bad{ color:var(--red) } .mid{ color:var(--amber) }
+  figure{ margin:0; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px }
+  img.fig{ width:100%; height:auto; display:block; border-radius:6px }
+  figcaption{ color:var(--muted); font-size:.88rem; margin-top:10px }
+  .two{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)) }
+  table{ width:100%; border-collapse:collapse; font-size:.93rem; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden }
+  th,td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--line) }
+  th{ background:rgba(31,78,140,.08); font-weight:600 }
+  tr:last-child td{ border-bottom:0 }
+  td.n{ font-variant-numeric:tabular-nums }
+  .find{ display:grid; gap:12px }
+  .find .card b{ display:block; margin-bottom:4px }
+  .pill{ font-size:.72rem; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); margin-left:6px; vertical-align:middle }
+  footer{ border-top:1px solid var(--line); padding:28px 0 48px; color:var(--muted); font-size:.9rem }
+  a{ color:var(--accent) }
+  .note{ border-left:4px solid var(--amber); background:rgba(183,121,31,.08); padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0; font-size:.95rem }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <span class="tag">Pilot study &middot; CAGE Challenge 4</span>
+    <h1>LLM-Written Detection Rules Are Precise but Incomplete: A Pilot in CAGE-4 with Negative Results on Co-Evolutionary Purple Teaming</h1>
+    <p>Can a team of language-model agents write and maintain detection rules while an adaptive attacker tries to evade them? We built the loop on the CAGE Challenge 4 enterprise network and measured what it does and does not deliver.</p>
+    <div class="authors">Bhavit Anand &middot; Krish Anand &middot; Prateek Tanwar &nbsp;(equal contribution) &nbsp;|&nbsp; Maharaja Agrasen Institute of Technology (GGSIPU), Delhi</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section>
+  <h2>The idea in one minute</h2>
+  <p class="lead">Security teams turn telemetry into alerts with detection rules, and attackers change behaviour until the rules stop firing. Purple teaming puts attackers and defenders in one feedback loop. We automated a small version of that loop.</p>
+  <figure>
+    <img class="fig" src="figs/fig_architecture.png" alt="Diagram of the co-evolution loop: Red planner and executor, simulator, telemetry bridge, five Blue agents, rule set, scoring against hidden labels, and feedback to both sides">
+    <figcaption>The loop. Red plans and plays an episode, a telemetry bridge turns simulator observations into events, five Blue agents write validated Sigma-style rules, and scores computed from hidden labels flow back to both sides. After eight rounds the rules are frozen and tested on held-out seeds.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Headline numbers</h2>
+  <p class="lead">Frozen rule sets, scored on 10 held-out seeds and 4 attacker strategies, native events only. 10 independent training runs per condition (95% bootstrap intervals in the paper).</p>
+  <div class="grid">
+    <div class="card"><div class="num good">0.97+ <small>precision</small></div><div class="label">LLM-written rules are precise: false-positive rate at most 0.03</div></div>
+    <div class="card"><div class="num mid">0.49 <small>recall</small></div><div class="label">co-evolved system in the ten main runs (0.26 against a fixed attacker); a replication on ten more seeds did not confirm that gap</div></div>
+    <div class="card"><div class="num bad">0.96 <small>recall</small></div><div class="label">ten hand-written rules, but with 19% false positives</div></div>
+    <div class="card"><div class="num">0.67 <small>recall</small></div><div class="label">ablation without performance feedback, with more false positives</div></div>
+    <div class="card"><div class="num good">0.69 <small>recall</small></div><div class="label">pooling the rules of three independent co-evolved runs, at 2.4% false positives (20-run replication, exploratory)</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Results</h2>
+  <div class="two">
+    <figure>
+      <img class="fig" src="figs/fig_bars.png" alt="Bar charts of native recall and false-positive rate for all conditions">
+      <figcaption>Recall and false-positive rate by condition. Whiskers are 95% bootstrap intervals.</figcaption>
+    </figure>
+    <figure>
+      <img class="fig" src="figs/fig_tradeoff.png" alt="Scatter plot of recall against false-positive rate">
+      <figcaption>The trade-off: LLM rules sit in the quiet, partial-recall region that neither hand-written nor random rules reach.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <h2>What we found</h2>
+  <div class="find">
+    <div class="card"><b>1. Quiet but incomplete <span class="pill">supported</span></b>LLM-written rules almost never raise false alarms, but they catch only about a quarter to two thirds of attacker events, depending on the setup.</div>
+    <div class="card"><b>2. Feedback trades recall for precision <span class="pill">supported</span></b>At the standard rule cap, telling Blue which rules were noisy lowers false positives (0.006 against 0.027) and lowers recall (0.49 against 0.67). With a larger cap (20 rules per agent) the false-positive advantage is no longer clear.</div>
+    <div class="card"><b>3. About half of the rules never fire <span class="pill">measured</span></b>Roughly half of the LLM-written rules did not alert on any held-out event, and three rules produce 80% of the attacker alerts. The effective rule set is much smaller than its size.</div>
+    <div class="card"><b>4. No clear benefit of co-evolution <span class="pill">negative result</span></b>In the ten main runs, training against a varied attacker gave more recall than a fixed one. Ten further runs per condition reversed the ordering (0.25 against 0.33), and over all twenty runs the difference was +0.076 with an interval that includes zero. A scripted evasive attacker, a larger rule budget and a larger model (3 runs) also showed no clear benefit. We report it as it came out.</div>
+    <div class="card"><b>5. Pooling independent runs works <span class="pill">exploratory</span></b>Taking the union of the rules of independent runs raises recall steadily. With 20 co-evolved runs available, 3 pooled runs give 0.69 recall at 0.024 false-positive rate, 5 give 0.82 at 0.045, and 10 give 0.96 at 0.080, against 0.96 at 0.193 for the hand-written rules. Pooled co-evolved sets were not clearly better than pooled fixed-attacker sets (every interval includes zero). This analysis was added after the main results, so we call it exploratory.</div>
+    <div class="card"><b>6. Whole campaigns are still caught <span class="pill">measured</span></b>Every rule set alerted on an attacker event in all 40 seen test episodes, with a median delay of 0 to 6.5 steps.</div>
+  </div>
+  <div class="two" style="margin-top:14px">
+    <figure>
+      <img class="fig" src="figs/fig_committee.png" alt="Recall against false-positive rate for committees of 1, 2, 3, 5 and 10 pooled runs">
+      <figcaption>Pooling the rules of independent runs (labels give the number of runs pooled). Exploratory.</figcaption>
+    </figure>
+    <figure>
+      <img class="fig" src="figs/fig_concentration.png" alt="Curves of the share of attacker alerts explained by the top k rules">
+      <figcaption>A handful of LLM-written rules carry almost all of the detection; random rules spread it over about 25.</figcaption>
+    </figure>
+    <figure>
+      <img class="fig" src="figs/fig_training.png" alt="Training curves of recall, false-positive rate and precision per round">
+      <figcaption>Training dynamics per round: with feedback, recall falls as noisy rules are retired.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <h2>Key table</h2>
+  <p class="lead">Native events, four seen attacker strategies, mean over 10 runs (the hand-written set is a single run).</p>
+  <table>
+    <thead><tr><th>Rule source</th><th>Precision</th><th>Recall</th><th>False-positive rate</th></tr></thead>
+    <tbody>
+      <tr><td>Ten hand-written rules</td><td class="n">0.962</td><td class="n">0.958</td><td class="n">0.193</td></tr>
+      <tr><td>Random rules</td><td class="n">0.909</td><td class="n">0.932</td><td class="n">0.488</td></tr>
+      <tr><td>LLM, fixed attacker</td><td class="n">0.974</td><td class="n">0.258</td><td class="n">0.011</td></tr>
+      <tr><td>LLM, co-evolved, no feedback</td><td class="n">0.992</td><td class="n">0.671</td><td class="n">0.027</td></tr>
+      <tr><td>LLM, co-evolved (full)</td><td class="n">0.996</td><td class="n">0.491</td><td class="n">0.006</td></tr>
+      <tr><td>LLM, co-evolved, per-action signal</td><td class="n">0.992</td><td class="n">0.426</td><td class="n">0.014</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Honest limits</h2>
+  <div class="note">This is a pilot on a simulator. Blue only detects (it does not change the network), part of the telemetry is synthetic and reported separately, one small quantised model wrote most rules, and intervals are wide with ten runs. We do not claim these rules are ready for a real SOC.</div>
+</section>
+
+<section>
+  <h2>How it was built</h2>
+  <p class="lead">Experiments ran on a single laptop (NVIDIA RTX 4050, 6 GB) with Qwen3-4B-Instruct for the main results, plus a three-run check with GLM-4.7-Flash. The three authors share equal credit. We used Claude (Anthropic) as a coding and writing assistant; the authors ran every experiment on their own hardware and checked every reported number against the result files.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    Bhavit Anand, Krish Anand, Prateek Tanwar &middot; Maharaja Agrasen Institute of Technology (GGSIPU), Delhi
+  </div>
+</footer>
+</body>
+</html>
