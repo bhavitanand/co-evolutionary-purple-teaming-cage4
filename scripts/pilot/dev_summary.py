@@ -7,7 +7,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 D = ROOT / "results/pilot_dev"
 out = ["# Dev variants (coevo, dev seeds 10-14, training episodes; mean of rounds 7-8 per seed, then mean over seeds)", "",
        "| variant | seeds | native recall | native FPR | native precision | active rules |", "|---|---|---|---|---|---|"]
-for v in ("base", "cap20", "coverage", "recycle", "richfb", "promptred", "agg"):
+for v in ("base", "cap20", "coverage", "recycle", "richfb", "promptred", "agg", "broad"):
     f = D / v / "train_log.jsonl"
     if not f.exists():
         continue

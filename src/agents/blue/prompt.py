@@ -86,6 +86,14 @@ COVERAGE_HINT = [
 ]
 
 
+# Variant 'broad' (env BLUE_BROAD=1): guidance toward simple, broad rules. Written from the visible field vocabulary, no labels.
+BROAD_HINT = [
+    "STYLE: prefer simple rules with one or two fields. A rule that matches on a single strong field, for example only the destination port, "
+    "is allowed and is often better than a long list of conditions. Do not add zone, address, privilege or parent_process conditions "
+    "unless the feedback shows the simple rule raised false alarms.",
+]
+
+
 LIMITS_HINT_AGG = [
     "LIMITS OF THE RULE LANGUAGE (rules that use anything below are rejected):",
     "- There is NO negated modifier: no not_in, notcontains, not_equals, not_startswith. To exclude something, "
@@ -142,6 +150,7 @@ def build_prompt(round_ctx: dict[str, Any], max_rules: int = 5, repair_errors: l
         "- Do not invent fields. Do not use ids, rule_id, round or agent_id (they are added for you).",
         *((LIMITS_HINT_AGG if os.environ.get("BLUE_AGG") else LIMITS_HINT) if hint else []),
         *(COVERAGE_HINT if os.environ.get("BLUE_COVERAGE_HINT") else []),
+        *(BROAD_HINT if os.environ.get("BLUE_BROAD") else []),
         "EXAMPLES OF VALID RULES:",
         json.dumps(examples, indent=1),
         "ALERTS YOUR CURRENT RULES FIRED LAST ROUND:",
