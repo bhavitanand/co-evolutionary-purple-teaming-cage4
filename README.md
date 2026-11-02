@@ -1,4 +1,4 @@
-# LLM-Written Detection Rules Are Precise but Incomplete: A Pilot in CAGE-4 with Negative Results on Co-Evolutionary Purple Teaming
+# LLM-Written Detection Rules Are Quiet but Incomplete: A Pilot in CAGE-4 with Negative Results on Co-Evolutionary Purple Teaming
 
 Code, frozen rule sets, cached test episodes and result files for the pilot study of LLM Blue agents that write Sigma-style detection
 rules against an adaptive LLM Red agent in CybORG / CAGE Challenge 4. The paper is in [paper/paper.pdf](paper/paper.pdf)
