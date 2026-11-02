@@ -29,7 +29,7 @@ def hero():
     fin = json.load(open(ROOT / "results/pilot/results_final.json", encoding="utf-8"))
     com = json.load(open(ROOT / "results/pilot/committee_rep.json", encoding="utf-8"))
     rec = lambda c: fin[c]["seen Red strategies|native|recall"]["ci"][0]  # noqa: E731
-    fig = plt.figure(figsize=(7.2, 2.3))
+    fig = plt.figure(figsize=(7.2, 2.6))
     # panel A
     ax = fig.add_axes([0.02, 0.06, 0.30, 0.78])
     ax.set_xlim(0, 10)
@@ -66,17 +66,20 @@ def hero():
     arrow(ax, (3.8, 3.45), (2.4, 5.5), color=RED, rad=0.0)
     ax.text(5.0, 4.9, "every round", fontsize=6, ha="center", style="italic", color=GREY)
     # panel C
-    ax = fig.add_axes([0.81, 0.14, 0.18, 0.66])
-    labels = ["Hand-written", "Co-evolved\n(1 run, mean of 20)", "Fixed Red\n(1 run, mean of 20)", "Co-evolved\n(3 runs pooled)"]
-    vals = [0.958, st.mean(com["coevo|1"]["recall"]), st.mean(com["llm_fixed_red|1"]["recall"]), st.mean(com["coevo|3"]["recall"])]
-    cols = [GREY, RED, BLUE, GREEN]
-    fpr = [0.193, st.mean(com["coevo|1"]["fpr"]), st.mean(com["llm_fixed_red|1"]["fpr"]), st.mean(com["coevo|3"]["fpr"])]
-    ax.barh(range(4)[::-1], vals, color=cols, height=0.62)
+    ax = fig.add_axes([0.81, 0.13, 0.18, 0.70])
+    base = {r["name"]: r["full"] for r in json.load(open(ROOT / "results/pilot_baselines/baselines.json", encoding="utf-8"))["rows"]}
+    NL = chr(10)
+    labels = ["Hand-written"+NL+"(10 rules, untuned)", "Hand-written,"+NL+"pruned on training", "Learned, no LLM"+NL+"(12 rules)", "Co-evolved LLM"+NL+"(1 run, mean of 20)", "Fixed-Red LLM"+NL+"(1 run, mean of 20)", "Co-evolved LLM"+NL+"(3 runs pooled)"]
+    vals = [base["static"]["recall"], base["static_tuned"]["recall"], base["learned12"]["recall"], st.mean(com["coevo|1"]["recall"]), st.mean(com["llm_fixed_red|1"]["recall"]), st.mean(com["coevo|3"]["recall"])]
+    cols = [GREY, GREY, "#7a7a7a", RED, BLUE, GREEN]
+    fpr = [base["static"]["fpr"], base["static_tuned"]["fpr"], base["learned12"]["fpr"], st.mean(com["coevo|1"]["fpr"]), st.mean(com["llm_fixed_red|1"]["fpr"]), st.mean(com["coevo|3"]["fpr"])]
+    n = len(vals)
+    ax.barh(range(n)[::-1], vals, color=cols, height=0.66)
     for i, (v, f) in enumerate(zip(vals, fpr)):
-        ax.text(v + 0.03, 3 - i + 0.14, f"{v:.2f}", va="center", fontsize=6.6, fontweight="bold")
-        ax.text(v + 0.03, 3 - i - 0.18, f"false alarms {f:.3f}", va="center", fontsize=5.0, color=GREY)
-    ax.set_yticks(range(4)[::-1])
-    ax.set_yticklabels(labels, fontsize=6)
+        ax.text(v + 0.03, n - 1 - i + 0.14, f"{v:.2f}", va="center", fontsize=6.4, fontweight="bold")
+        ax.text(v + 0.03, n - 1 - i - 0.18, f"false alarms {f:.3f}", va="center", fontsize=4.8, color=GREY)
+    ax.set_yticks(range(n)[::-1])
+    ax.set_yticklabels(labels, fontsize=5.2)
     ax.set_xlim(0, 1.75)
     ax.set_xticks([0, 0.5, 1.0])
     ax.set_xlabel("native recall", fontsize=6)
