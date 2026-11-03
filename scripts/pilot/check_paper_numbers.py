@@ -3,9 +3,9 @@ import json
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-md = (ROOT / "paper/paper.md").read_text(encoding="utf-8").split("\n")
+md = (ROOT / "paper" / __import__("os").environ.get("PAPER_SRC", "paper.md")).read_text(encoding="utf-8").split("\n")
 J = lambda p: json.load(open(ROOT / p, encoding="utf-8"))  # noqa: E731
-fin, ev, glm, cap = J("results/pilot/results_final.json"), J("results/pilot/results_evasive.json"), J("results/pilot_glm/results_n3.json"), J("results/pilot_cap20/results.json")
+fin, ev, glm, cap = J("results/pilot/results_final.json"), J("results/pilot/results_evasive.json"), J("results/pilot_glm/results_n10.json" if __import__("os").environ.get("PAPER_SRC") else "results/pilot_glm/results_n3.json"), J("results/pilot_cap20/results.json")
 SEEN, UN = "seen Red strategies|native|", "UNSEEN Red (hit_and_run)|native|"
 
 

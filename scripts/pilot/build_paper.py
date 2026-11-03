@@ -18,6 +18,7 @@ Run with the scratch venv that has reportlab:  python scripts/pilot/build_paper.
 """
 from __future__ import annotations
 
+import os
 import pathlib
 import re
 
@@ -33,8 +34,8 @@ from reportlab.platypus import (BalancedColumns, BaseDocTemplate, CondPageBreak,
                                 Paragraph, Spacer, Table, TableStyle)
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SRC = ROOT / "paper" / "paper.md"
-OUT = ROOT / "paper" / "paper.pdf"
+SRC = ROOT / "paper" / os.environ.get("PAPER_SRC", "paper.md")
+OUT = ROOT / "paper" / os.environ.get("PAPER_OUT", "paper.pdf")
 FONTS = pathlib.Path("C:/Windows/Fonts")
 
 BLUE = colors.HexColor("#1F4E8C")
