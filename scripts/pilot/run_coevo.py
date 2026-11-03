@@ -28,7 +28,7 @@ if CAGE.exists():
 
 from src.agents.blue.agent import BlueLLMAgent  # noqa: E402
 from src.agents.blue.llm_client import LlamaServerClient  # noqa: E402
-from src.agents.red.evasive import EvasiveRed  # noqa: E402
+from src.agents.red.evasive import EvasiveRed, ThompsonRed  # noqa: E402
 from src.agents.red.llm_red import PlannedRed, RedMemory, RedPlanner  # noqa: E402
 from src.loop.coevo import (BLUE_AGENTS, BlueTeam, EpisodePlayer, RetryClient, apply_rules, feedback_for, feedback_rich, observed_lines,  # noqa: E402
                             retire_weak_rules, rule_stats, score)
@@ -83,7 +83,7 @@ def run_seed(args, cond: str, seed: int, out_dir: pathlib.Path, player: EpisodeP
     team = BlueTeam(agents)
     red_client = RetryClient(LlamaServerClient(args.url, model=args.model, temperature=0.7, seed=base, max_tokens=400)) if adaptive_red and not scripted_red else None
     variants = set(args.variant.split("+"))
-    planner = (EvasiveRed(seed) if scripted_red else RedPlanner(red_client, RedMemory(), coupled=True, react="promptred" in variants)) if adaptive_red else None
+    planner = ((ThompsonRed(seed) if 'thompson' in variants else EvasiveRed(seed)) if scripted_red else RedPlanner(red_client, RedMemory(), coupled=True, react="promptred" in variants)) if adaptive_red else None
     silent: dict[str, int] = {}  # variant 'recycle': consecutive rounds each rule stayed silent
     fb_fn = feedback_rich if "richfb" in variants else feedback_for
     rng = random.Random(seed)

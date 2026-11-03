@@ -47,3 +47,25 @@ class EvasiveRed:
         reward = 0.0 if not out.get("impact_ok") else 1.0 - out.get("caught_pct", 100) / 100.0
         self.last_reward[self.current] = reward
         self.history.append({"round": entry["round"], "plan": self.current, "reward": round(reward, 3)})
+
+
+class ThompsonRed(EvasiveRed):
+    """Learned Red for long runs: Thompson sampling over the same plan library, one Beta posterior per plan, updated every round with
+    the evasion reward (share of events no rule alerted on, 0 if no successful Impact). Unlike EvasiveRed it keeps exploring and
+    averages over rounds, so it can use more than eight rounds to learn. Sees only the caught share, never the rules."""
+
+    def __init__(self, seed: int):
+        super().__init__(seed)
+        self.post = {k: [1.0, 1.0] for k in LIBRARY}
+
+    def plan(self, round_ctx: dict[str, Any]) -> dict[str, Any]:
+        name = max(self.post, key=lambda k: self.rng.betavariate(*self.post[k]))
+        self.current = name
+        return {"plan": LIBRARY[name].to_dict(), "plan_name": name, "source": "thompson", "errors": [], "llm_calls": 0,
+                "tokens_out": 0, "llm_latency_s": 0.0}
+
+    def update(self, entry: dict[str, Any]) -> None:
+        super().update(entry)
+        r = self.history[-1]["reward"]
+        self.post[self.current][0] += r
+        self.post[self.current][1] += 1.0 - r
