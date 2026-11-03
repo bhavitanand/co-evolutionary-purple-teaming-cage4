@@ -99,7 +99,7 @@ def arabize(t: str) -> str:
         one = str(r2i(m.group(2))) + (f".{ord(m.group(3)) - 64}" if m.group(3) else "")
         two = f" and {r2i(m.group(4))}" if m.group(4) else ""
         return f"{m.group(1)} {one}{two}"
-    return re.sub(r"\b(Sections?) ([IVX]+)(?:-([A-F]))?(?: and ([IVX]+))?\b", sec, t)
+    return re.sub(r"\b(Sections?) ([IVX]+)(?:-([A-H]))?(?: and ([IVX]+))?\b", sec, t)
 
 
 def inline(text: str) -> str:
