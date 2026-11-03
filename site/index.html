@@ -140,6 +140,17 @@
 </section>
 
 <section>
+  <h2>After submission (3 Nov)</h2>
+  <div class="find">
+    <div class="card"><b>Larger model, ten runs <span class="pill">negative result</span></b>GLM-4.7-Flash at ten runs per condition: co-evolved 0.652 recall against 0.693 for a fixed Red (difference -0.042 [-0.195, +0.114]). Its Red planner does not react to being caught.</div>
+    <div class="card"><b>A learned Red <span class="pill">negative result</span></b>A Thompson-sampling Red trained for 16 rounds failed the rule we fixed in advance on development seeds (false positives 0.030 against 0.010), so it was not run further.</div>
+    <div class="card"><b>Look-alike benign events <span class="pill">stress test</span></b>Adding invented benign events that copy attacker signatures raises false positives for every rule set (fitted rules 0.00 to 0.84). The LLM rules' lower absolute rates mostly reflect lower recall.</div>
+    <div class="card"><b>Recall rests on the port <span class="pill">stress test</span></b>Giving attacker network events a random destination port cuts recall for every rule set: hand-written 0.96 to 0.46, co-evolved LLM 0.37 to 0.01. CAGE-4's Red cannot change its ports, so co-evolution had nothing to evade. Next: a testbed where the attacker controls these details.</div>
+  </div>
+  <div class="note" style="margin-top:12px">These results are not in the submitted paper. Files: results/followup_summary.md, results/pilot_glm, results/pilot_hard, results/pilot_evasion. The look-alike events and port changes are invented by us.</div>
+</section>
+
+<section>
   <h2>Honest limits</h2>
   <div class="note">This is a pilot on a simulator. Blue only detects (it does not change the network), part of the telemetry is synthetic and reported separately, one small quantised model wrote most rules, and intervals are wide with ten runs. We do not claim these rules are ready for a real SOC.</div>
 </section>
