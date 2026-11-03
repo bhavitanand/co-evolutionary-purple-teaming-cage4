@@ -5,6 +5,7 @@ GreenHardNegative); they show how rule sets behave when benign traffic looks lik
 Frozen rules only (no training). Seen test episodes, native events. -> results/pilot_hard/hard_eval.md/json (run with .venv-cyborg python)."""
 import copy
 import json
+import os
 import pathlib
 import random
 import statistics as st
@@ -20,6 +21,11 @@ from src.rules.schema import Rule  # noqa: E402
 SIG = ["category", "dst_port", "protocol", "service_name", "process_name", "parent_process", "privilege", "is_decoy"]
 CTX = ["zone", "subnet", "host_id", "src_ip", "dst_ip"]
 LEVELS = [0, 1, 4]
+COPY = float(os.environ.get("CTX_COPY", "0"))  # share of look-alike events whose context (zone, host, addresses) is copied from the attacker event instead of a benign one
+TAG = os.environ.get("HARD_TAG", "")
+if os.environ.get("HARD_LEVELS"):
+    LEVELS = [int(x) for x in os.environ["HARD_LEVELS"].split(",")]
+QUICK = bool(os.environ.get("HARD_QUICK"))
 
 
 def harden(ep, h, seed):
@@ -38,8 +44,9 @@ def harden(ep, h, seed):
             continue
         b = rng.choice(pool)
         e = copy.deepcopy(a)
-        for k in CTX:
-            e[k] = b.get(k)
+        if COPY == 0 or rng.random() >= COPY:
+            for k in CTX:
+                e[k] = b.get(k)
         n += 1
         e.update(event_id=f"hn{n:06d}", label_red=0, source_agent="green", source_action="GreenHardNegative", step=rng.randint(0, ep["last_step"]))
         out.append(e)
@@ -77,14 +84,14 @@ def cell(vals):
 folders = ("results/pilot", "results/pilot_rep")
 sets = {"Static hand-written (10 rules)": [B.uniform(H.static)],
         "Learned rules, no LLM (12)": [B.uniform([Rule.from_dict(r) for r in json.loads((ROOT / "results/pilot_baselines/learned12.json").read_text(encoding="utf-8-sig"))])]}
-for label, cond in (("LLM, fixed Red", "llm_fixed_red"), ("LLM, no feedback", "coevo_nofeedback"), ("LLM, co-evolved", "coevo")):
+for label, cond in ((("LLM, fixed Red", "llm_fixed_red"), ("LLM, co-evolved", "coevo")) if QUICK else (("LLM, fixed Red", "llm_fixed_red"), ("LLM, no feedback", "coevo_nofeedback"), ("LLM, co-evolved", "coevo"))):
     sets[label] = B.load_runs(cond, folders) if cond != "coevo_nofeedback" else B.load_runs(cond, ("results/pilot",))
 runs_co = B.load_runs("coevo", folders)
-for k in (3, 5):
+for k in ((3,) if QUICK else (3, 5)):
     sets[f"LLM co-evolved, {k} runs pooled"] = [H.merged(*runs_co[i:i + k]) for i in range(0, len(runs_co) - k + 1, k)]
 
 res, lines = {}, ["# Harder test: invented benign events that copy attacker signatures (frozen rules, seen test episodes, native events)", "",
-                  "Level h = hard benign events added per native attacker event (invented by us, labelled benign). Mean [95% bootstrap CI over runs or groups; no CI under 4].", "",
+                  f"Level h = hard benign events added per native attacker event (invented by us, labelled benign); context copied from the attacker event in {COPY:.0%} of them. Mean [95% bootstrap CI over runs or groups; no CI under 4].", "",
                   "| rule set | runs/groups | " + " | ".join(f"h={h} recall | h={h} FPR" for h in LEVELS) + " |", "|---|---|" + "---|---|" * len(LEVELS)]
 hard = {h: [harden(ep, h, 1000 * h + i) for i, ep in enumerate(H.eps)] for h in LEVELS}
 for name, runs in sets.items():
@@ -97,5 +104,5 @@ for name, runs in sets.items():
     print(lines[-1], flush=True)
 out = ROOT / "results/pilot_hard"
 out.mkdir(exist_ok=True)
-(out / "hard_eval.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-(out / "hard_eval.json").write_text(json.dumps(res), encoding="utf-8")
+(out / f"hard_eval{TAG}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+(out / f"hard_eval{TAG}.json").write_text(json.dumps(res), encoding="utf-8")
