@@ -1,4 +1,4 @@
-import pathlib, re
+import pathlib
 p = pathlib.Path("paper/paper_v2.md")
 t = p.read_text(encoding="utf-8").replace("\r\n", "\n")
 
@@ -34,8 +34,8 @@ sub("in a three-run check with a larger model", "in a ten-run check with a large
 sub("and neither a scripted evasive Red nor a larger rule budget changed that", "and neither a larger model, a scripted evasive Red nor a larger rule budget changed that")
 # discussion
 k = t.index("with GLM-4.7-Flash the co-evolved system did not beat the fixed-Red baseline on recall")
-l = t.index("cannot settle it,", k) + len("cannot settle it,")
-t = t[:k] + "with GLM-4.7-Flash and ten runs per condition the co-evolved system did not beat the fixed-Red baseline on recall (-0.042 [-0.195, +0.114]) and its Red planner did not respond to Blue," + t[l:]
+end = t.index("cannot settle it,", k) + len("cannot settle it,")
+t = t[:k] + "with GLM-4.7-Flash and ten runs per condition the co-evolved system did not beat the fixed-Red baseline on recall (-0.042 [-0.195, +0.114]) and its Red planner did not respond to Blue," + t[end:]
 # appendix B
 sub("we tried three Blue-side variants on five development seeds (10 to 14)", "we tried eight Blue-side and Red-side variants on five development seeds (10 to 14)")
 sub("The variants were the baseline prompt, a higher cap on active rules per agent (20 instead of 12), and a generic coverage hint added to the prompt (cover every event category in the zone's common patterns, and prefer one rule per distinct pattern).",

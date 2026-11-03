@@ -26,9 +26,7 @@ def arrow(ax, p, q, color="#33507a", lw=1.0, rad=0.0, ls="-"):
 
 
 def hero():
-    fin = json.load(open(ROOT / "results/pilot/results_final.json", encoding="utf-8"))
     com = json.load(open(ROOT / "results/pilot/committee_rep.json", encoding="utf-8"))
-    rec = lambda c: fin[c]["seen Red strategies|native|recall"]["ci"][0]  # noqa: E731
     fig = plt.figure(figsize=(7.2, 2.6))
     # panel A
     ax = fig.add_axes([0.02, 0.06, 0.30, 0.78])

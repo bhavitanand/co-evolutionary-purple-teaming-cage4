@@ -1,5 +1,4 @@
 """One-off: add the field-usage finding (LLM rules use the port but narrow it with enriched context), fix the 'precise' framing in abstract/conclusion."""
-import re
 p = "paper/paper.md"
 s = open(p, encoding="utf-8", newline=None).read()
 

@@ -27,6 +27,6 @@ L = ["# Field profile of native test events (40 seen episodes)", "",
      f"- benign process events: {len(bp)}; with parent_process systemd: {sum(1 for e in bp if e['parent_process'] == 'systemd')}; with privilege elevated: {sum(1 for e in bp if e['privilege'] == 'elevated')}",
      f"- attacker process events: {len(ap)}; with a daemon parent (sshd, apache2, haraka, tomcat): {sum(1 for e in ap if e['parent_process'] in ('sshd', 'apache2', 'haraka', 'tomcat'))}; with parent systemd: {sum(1 for e in ap if e['parent_process'] == 'systemd')}",
      f"- share of attacker native events that are network events: {len(an) / len(a):.1%}",
-     f"- native events by Red action: " + ", ".join(f"{k} {v}" for k, v in collections.Counter(e['source_action'] for e in a).most_common())]
+     "- native events by Red action: " + ", ".join(f"{k} {v}" for k, v in collections.Counter(e['source_action'] for e in a).most_common())]
 (ROOT / "results/pilot_baselines/field_profile.md").write_text("\n".join(L) + "\n", encoding="utf-8")
 print("\n".join(L))

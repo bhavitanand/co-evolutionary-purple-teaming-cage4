@@ -1,7 +1,6 @@
 """QA: every number in the paper's result tables I, II, VI, VII, VIII must equal the value in the result JSON (3 decimals)."""
 import json
 import pathlib
-import re
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 md = (ROOT / "paper/paper.md").read_text(encoding="utf-8").split("\n")

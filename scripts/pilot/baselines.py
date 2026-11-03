@@ -11,7 +11,6 @@ Outputs results/pilot_baselines/baselines.json and baselines.md.  Scoring: seen 
 """
 from __future__ import annotations
 
-import copy
 import gzip
 import itertools
 import json
@@ -234,13 +233,13 @@ def main():
         runs = load_runs(cond, folders)
         per = [(evaluate(r, test), evaluate(r, unseen), evaluate(r, test_s), n_rules(r)) for r in runs]
         llm[cond] = per
-        mean = lambda i, m: st.mean(p[i][m] for p in per)
+        mean = lambda i, m: st.mean(p[i][m] for p in per)  # noqa: E731
         rows.append((cond, f"{label}", st.mean(p[3] for p in per),
                      {m: mean(0, m) for m in per[0][0]}, {m: mean(1, m) for m in per[0][1]}, {m: mean(2, m) for m in per[0][2]}))
         print(label, "rules/agent %.1f" % rows[-1][2], {k: round(v, 3) for k, v in rows[-1][3].items()}, "stripped", {k: round(v, 3) for k, v in rows[-1][5].items()}, flush=True)
 
     # best-of comparisons: is a single LLM run better than the learned baseline at the same budget? (per-run recall at matched FPR)
-    res["rows"] = [dict(name=n, label=l, rules_per_agent=r, full=f, unseen=u, stripped=s) for n, l, r, f, u, s in rows]
+    res["rows"] = [dict(name=n, label=lab, rules_per_agent=r, full=f, unseen=u, stripped=s) for n, lab, r, f, u, s in rows]
     res["llm_runs"] = {c: [dict(full=p[0], unseen=p[1], stripped=p[2], rules=p[3]) for p in per] for c, per in llm.items()}
     res["ci"] = {c: {m: boot([p[0][m] for p in per]) for m in ("recall", "fpr", "precision")} for c, per in llm.items()}
     (OUT / "baselines.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
@@ -252,8 +251,8 @@ def main():
          f"Attacker events are {prev:.1%} of native test events, so raw precision is flattered. `Prec@1%` is precision if attackers were 1% of events (computed from recall and FPR).",
          "Scored on the 40 seen test episodes, native events; LLM rows are means over runs; `unseen` is hit_and_run (10 episodes).", "",
          "| System | rules/agent | recall | FPR | precision | balanced acc | Prec@1% | recall (unseen) | FPR (unseen) | recall, no enriched fields | FPR, no enriched fields |", "|---|---|---|---|---|---|---|---|---|---|---|"]
-    for n, l, r, fl, un, sp in rows:
-        L.append(f"| {l} | {r:.1f} | {f(fl['recall'])} | {f(fl['fpr'])} | {f(fl['precision'])} | {f(fl['bal_acc'])} | {f(fl['prec_at_1pct'])} | {f(un['recall'])} | {f(un['fpr'])} | "
+    for n, lab, r, fl, un, sp in rows:
+        L.append(f"| {lab} | {r:.1f} | {f(fl['recall'])} | {f(fl['fpr'])} | {f(fl['precision'])} | {f(fl['bal_acc'])} | {f(fl['prec_at_1pct'])} | {f(un['recall'])} | {f(un['fpr'])} | "
                  f"{f(sp['recall']) if sp else 'n/a'} | {f(sp['fpr']) if sp else 'n/a'} |")
     L += ["", "95% bootstrap intervals over the ten training runs (full-field scoring): ", ""]
     for c, ci in res["ci"].items():
