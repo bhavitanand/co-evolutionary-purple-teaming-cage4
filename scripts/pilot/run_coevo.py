@@ -97,6 +97,7 @@ def run_seed(args, cond: str, seed: int, out_dir: pathlib.Path, player: EpisodeP
         last_events.setdefault(e["blue_agent"], []).append(e)
     feedback = {a: observed_lines(last_events.get(a, [])) for a in BLUE_AGENTS}
 
+    prev_caught = 0.0  # variant 'porthop': share of Red activity caught last round
     for rnd in range(1, args.rounds + 1):
         t0 = time.perf_counter()
         # ---- Blue phase: propose rules from last round's feedback
@@ -132,10 +133,19 @@ def run_seed(args, cond: str, seed: int, out_dir: pathlib.Path, player: EpisodeP
             ep = player.play(PlannedRed, derive_env_seed(seed, rnd, 0), steps=args.steps, plan=decision["plan"])
         else:
             ep = player.play("cage4_default", derive_env_seed(seed, rnd, 0), steps=args.steps)
+        hopped = False
+        if "porthop" in variants and rnd >= 2 and prev_caught >= 0.3:  # variant 'porthop': Red evades by moving its network events to other ports
+            hop_rng = random.Random(derive_env_seed(seed, rnd, 1))
+            for e in ep["events"]:
+                if e["provenance"] == "native" and e["label_red"] in (1, "1") and e.get("dst_port") is not None:
+                    e["dst_port"] = hop_rng.randint(1024, 65535)
+            hopped = True
+        plan_info["hopped"] = hopped
         # ---- score the CURRENT rules on this round's episode
         rules_by_agent = team.rules()
         alerts = apply_rules(ep["events"], rules_by_agent)
         sc = score(ep["events"], alerts, ep["last_step"])
+        prev_caught = sc["all"]["recall"] or 0.0
         # ---- feedback for the next round + rule retirement (training labels, training seeds only)
         dropped: list[str] = []
         by_agent_alerts: dict[str, list] = {a: [] for a in BLUE_AGENTS}
