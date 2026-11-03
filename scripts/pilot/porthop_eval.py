@@ -3,6 +3,7 @@ native recall on the original seen test episodes and with Red's ports re-drawn (
 compared with the 20 original co-evolved runs (values from results/pilot_evasion/evasion_eval.json and results/pilot_hard/hard_eval.json).
 -> results/pilot_porthop/porthop_eval.md (run with .venv-cyborg python)."""
 import json
+import os
 import pathlib
 import random
 import statistics as st
@@ -48,7 +49,8 @@ def diff(a, b, n=10000, seed=0):
     return st.mean(a) - st.mean(b), ds[int(0.025 * n)], ds[int(0.975 * n) - 1]
 
 
-runs = B.load_runs("coevo", ("results/pilot_porthop",))
+DIR = os.environ.get("PORTHOP_DIR", "pilot_porthop")
+runs = B.load_runs("coevo", (f"results/{DIR}",))
 orig = H.eps
 hop = [perturb_port(ep, 7000 + i) for i, ep in enumerate(orig)]  # same seeds as evasion_eval.py (kind "port" is the 2nd kind but perturb seeds use 7000 + i there too)
 rec0 = [metric(r, orig, "recall") for r in runs]
@@ -60,13 +62,13 @@ b_rec0, b_rec1 = base["LLM, co-evolved|none"], base["LLM, co-evolved|port"]
 b_fpr0 = [e["fpr"] for e in hard["LLM, co-evolved|0"]]
 f = lambda v: "%.3f [%.3f, %.3f]" % boot(v)  # noqa: E731
 d = lambda a, b: "%+.3f [%+.3f, %+.3f]" % diff(a, b)  # noqa: E731
-lines = ["# Port-hopping Red: robustness of rules trained against it (pre-registered, results/PREREG_porthop.md)", "",
+lines = [f"# Port-hopping Red ({DIR}): robustness of rules trained against it (pre-registered, see results/PREREG_*.md)", "",
          "Frozen rules, seen test episodes, native events. Mean [95% bootstrap CI over runs].", "",
          "| rule sets | runs | recall, original test | recall, ports re-drawn | FPR, original test |", "|---|---|---|---|---|",
-         f"| coevo trained vs port-hopping Red (seeds 35-44) | {len(runs)} | {f(rec0)} | {f(rec1)} | {f(fpr0)} |",
+         f"| coevo trained vs port-hopping Red, {DIR} (seeds 35-44) | {len(runs)} | {f(rec0)} | {f(rec1)} | {f(fpr0)} |",
          f"| coevo, original Red (20 runs) | 20 | {f(b_rec0)} | {f(b_rec1)} | {f(b_fpr0)} |", "",
          f"Difference (port-hop trained minus original), recall with ports re-drawn: {d(rec1, b_rec1)}; recall, original test: {d(rec0, b_rec0)}; FPR, original test: {d(fpr0, b_fpr0)}.",
          "", "Pre-registered claim (robustness improves) is supported only if the first difference has an interval above zero and the FPR difference is at most +0.02."]
-out = ROOT / "results/pilot_porthop"
+out = ROOT / "results" / DIR
 (out / "porthop_eval.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 print("\n".join(lines))

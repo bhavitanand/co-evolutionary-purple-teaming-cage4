@@ -224,6 +224,8 @@ def main() -> None:
         raise SystemExit(f"seeds {bad} are not training seeds (0-9); test seeds 100-109 are for scripts/pilot/eval_rules.py")
     if "broad" in args.variant.split("+"):  # variant 'broad': prompt guidance toward simple, broad rules
         os.environ["BLUE_BROAD"] = "1"
+    if "porthint" in args.variant.split("+"):  # variant 'porthint': Blue is told the port is unreliable
+        os.environ["BLUE_PORTHINT"] = "1"
     if "agg" in args.variant.split("+"):  # variant 'agg' (item 8): rules may use count-within-window aggregates
         os.environ["BLUE_AGG"] = "1"
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")

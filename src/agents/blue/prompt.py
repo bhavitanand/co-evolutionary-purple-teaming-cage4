@@ -94,6 +94,13 @@ BROAD_HINT = [
 ]
 
 
+# Variant 'porthint' (env BLUE_PORTHINT=1): tells Blue that the destination port is an unreliable signal. Written without labels.
+PORT_HINT = [
+    "NOTE: attackers can change the destination port from one round to the next, so a port that appeared in a past attack is not a reliable signal. "
+    "Prefer rules on process_name, parent_process, privilege, protocol or service_name that would still match if the port changed.",
+]
+
+
 LIMITS_HINT_AGG = [
     "LIMITS OF THE RULE LANGUAGE (rules that use anything below are rejected):",
     "- There is NO negated modifier: no not_in, notcontains, not_equals, not_startswith. To exclude something, "
@@ -151,6 +158,7 @@ def build_prompt(round_ctx: dict[str, Any], max_rules: int = 5, repair_errors: l
         *((LIMITS_HINT_AGG if os.environ.get("BLUE_AGG") else LIMITS_HINT) if hint else []),
         *(COVERAGE_HINT if os.environ.get("BLUE_COVERAGE_HINT") else []),
         *(BROAD_HINT if os.environ.get("BLUE_BROAD") else []),
+        *(PORT_HINT if os.environ.get("BLUE_PORTHINT") else []),
         "EXAMPLES OF VALID RULES:",
         json.dumps(examples, indent=1),
         "ALERTS YOUR CURRENT RULES FIRED LAST ROUND:",
